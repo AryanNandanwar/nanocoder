@@ -38,9 +38,7 @@ export class AcpSession {
 
 	cancel(): void {
 		this.abortController.abort();
-	}
-
-	beginTurn(): void {
+		// Create a fresh controller for potential subsequent prompts
 		this.abortController = new AbortController();
 	}
 }

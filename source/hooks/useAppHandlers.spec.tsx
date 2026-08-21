@@ -68,7 +68,9 @@ function makeProps(overrides: ProbeOverrides) {
 	const setLiveComponent = spy<[React.ReactNode]>();
 	const enterModelSelectionMode = spy<[]>();
 	const enterModelDatabaseMode = spy<[]>();
+	const enterConfigWizardMode = spy<[]>();
 	const enterSettingsMode = spy<[]>();
+	const enterMcpWizardMode = spy<[]>();
 	const enterExplorerMode = spy<[]>();
 	const enterIdeSelectionMode = spy<[]>();
 	const enterTune = spy<[]>();
@@ -112,7 +114,9 @@ function makeProps(overrides: ProbeOverrides) {
 		getMessageTokens: () => 0,
 		enterModelSelectionMode,
 		enterModelDatabaseMode,
+		enterConfigWizardMode,
 		enterSettingsMode,
+		enterMcpWizardMode,
 		enterExplorerMode,
 		enterIdeSelectionMode,
 		enterTune,

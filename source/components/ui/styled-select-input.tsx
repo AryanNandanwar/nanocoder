@@ -1,6 +1,6 @@
 import {Box, Text} from 'ink';
 import SelectInput from 'ink-select-input';
-import type {ComponentProps, ReactElement} from 'react';
+import type {ReactElement} from 'react';
 
 import {useTheme} from '@/hooks/useTheme';
 
@@ -25,37 +25,25 @@ interface Item<V> {
  * and selected-label colour are a hardcoded `blue` that all but disappears
  * against a dark terminal background.
  */
-interface StyledSelectInputProps<V, I extends Item<V> = Item<V>> {
-	items?: Array<I>;
+interface StyledSelectInputProps<V> {
+	items?: Array<Item<V>>;
 	isFocused?: boolean;
 	initialIndex?: number;
 	limit?: number;
-	onSelect?: (item: I) => void;
-	onHighlight?: (item: I) => void;
-	itemComponent?: (props: I & {isSelected?: boolean}) => ReactElement;
+	onSelect?: (item: Item<V>) => void;
+	onHighlight?: (item: Item<V>) => void;
+	itemComponent?: (props: {
+		isSelected?: boolean;
+		label: string;
+	}) => ReactElement;
 }
 
-export function StyledSelectInput<V, I extends Item<V> = Item<V>>(
-	props: StyledSelectInputProps<V, I>,
-) {
+export function StyledSelectInput<V>(props: StyledSelectInputProps<V>) {
 	const {colors} = useTheme();
 
-	const itemComponent =
-		props.itemComponent ??
-		(({isSelected, label}) => (
-			<Text
-				color={isSelected ? colors.primary : colors.text}
-				wrap="truncate-end"
-			>
-				{label}
-			</Text>
-		));
-
-	// ink-select-input's runtime spreads the whole item into these; its own
-	// types just don't say so.
 	return (
 		<SelectInput
-			{...(props as unknown as ComponentProps<typeof SelectInput>)}
+			{...props}
 			// Fixed-width indicator: Ink trims a trailing space only on rows that
 			// overflow, which left truncated rows a column left of short ones.
 			indicatorComponent={({isSelected}) => (
@@ -68,9 +56,15 @@ export function StyledSelectInput<V, I extends Item<V> = Item<V>>(
 			// Truncate rather than wrap: a long label (a path, a URL) reflowed with
 			// no hanging indent and the list read as a jumble on narrow terminals.
 			itemComponent={
-				itemComponent as unknown as ComponentProps<
-					typeof SelectInput
-				>['itemComponent']
+				props.itemComponent ??
+				(({isSelected, label}) => (
+					<Text
+						color={isSelected ? colors.primary : colors.text}
+						wrap="truncate-end"
+					>
+						{label}
+					</Text>
+				))
 			}
 		/>
 	);

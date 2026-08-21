@@ -13,7 +13,6 @@ process.env.NANOCODER_CONFIG_DIR = mkdtempSync(
 const {resetPreferencesCache} = await import('@/config/preferences');
 resetPreferencesCache();
 
-import type {SettingsTabId} from '@/app/components/settings-constants';
 import type {ActiveMode} from '@/hooks/useAppState';
 import type {LLMClient, Message} from '@/types/core';
 import type {AIProviderConfig, TuneConfig} from '@/types/config';
@@ -73,7 +72,6 @@ function setup(probe: ProbeProps = {}) {
 	const setMessages = spy<[Message[]]>();
 	const setActiveMode = spy<[ActiveMode]>();
 	const setIsSettingsMode = spy<[boolean]>();
-	const setSettingsActiveTab = spy<[SettingsTabId | undefined]>();
 	const addToChatQueue = spy<[React.ReactNode]>();
 	const reinitializeMCPServers = spy<[unknown]>();
 	const setTune = spy<[TuneConfig]>();
@@ -91,7 +89,6 @@ function setup(probe: ProbeProps = {}) {
 		getMessageTokens: () => 0,
 		setActiveMode,
 		setIsSettingsMode,
-		setSettingsActiveTab,
 		addToChatQueue,
 		reinitializeMCPServers: async () => {
 			reinitializeMCPServers(undefined);
@@ -108,7 +105,6 @@ function setup(probe: ProbeProps = {}) {
 		setMessages,
 		setActiveMode,
 		setIsSettingsMode,
-		setSettingsActiveTab,
 		addToChatQueue,
 		setTune,
 	};
@@ -121,12 +117,15 @@ test('returns the expected handler surface', t => {
 	t.is(typeof handlers.exitMode, 'function');
 	t.is(typeof handlers.enterModelSelectionMode, 'function');
 	t.is(typeof handlers.enterModelDatabaseMode, 'function');
+	t.is(typeof handlers.enterConfigWizardMode, 'function');
+	t.is(typeof handlers.enterMcpWizardMode, 'function');
 	t.is(typeof handlers.enterExplorerMode, 'function');
 	t.is(typeof handlers.enterIdeSelectionMode, 'function');
 	t.is(typeof handlers.enterSettingsMode, 'function');
 	t.is(typeof handlers.enterTune, 'function');
 	t.is(typeof handlers.handleModelSelect, 'function');
 	t.is(typeof handlers.handleConfigWizardComplete, 'function');
+	t.is(typeof handlers.handleMcpWizardComplete, 'function');
 	t.is(typeof handlers.handleTuneSelect, 'function');
 });
 
@@ -152,6 +151,8 @@ test('each enter*Mode helper sets the matching active mode', t => {
 
 	handlers.enterModelSelectionMode();
 	handlers.enterModelDatabaseMode();
+	handlers.enterConfigWizardMode();
+	handlers.enterMcpWizardMode();
 	handlers.enterExplorerMode();
 	handlers.enterIdeSelectionMode();
 	handlers.enterTune();
@@ -159,6 +160,8 @@ test('each enter*Mode helper sets the matching active mode', t => {
 	t.deepEqual(setActiveMode.calls, [
 		['model'],
 		['modelDatabase'],
+		['configWizard'],
+		['mcpWizard'],
 		['explorer'],
 		['ideSelection'],
 		['tune'],
@@ -180,11 +183,12 @@ test('cancel handlers all return active mode to null', t => {
 	handlers.handleModelSelectionCancel();
 	handlers.handleModelDatabaseCancel();
 	handlers.handleConfigWizardCancel();
+	handlers.handleMcpWizardCancel();
 	handlers.handleExplorerCancel();
 	handlers.handleIdeSelectionCancel();
 	handlers.handleTuneCancel();
 
-	t.is(setActiveMode.calls.length, 6);
+	t.is(setActiveMode.calls.length, 7);
 	for (const args of setActiveMode.calls) {
 		t.deepEqual(args, [null]);
 	}
@@ -285,33 +289,11 @@ test('handleConfigWizardComplete with no path only exits mode', async t => {
 	t.is(addToChatQueue.calls.length, 0);
 });
 
-test('reloadProviders leaves the conversation and settings panel intact', async t => {
-	const {
-		handlers,
-		setMessages,
-		setActiveMode,
-		setIsSettingsMode,
-		addToChatQueue,
-	} = setup({client: createMockClient()});
+test('handleMcpWizardComplete with no path only exits mode', async t => {
+	const {handlers, setActiveMode, addToChatQueue} = setup();
 
-	await handlers.reloadProviders();
+	await handlers.handleMcpWizardComplete();
 
-	// This is why reloadProviders exists rather than reusing
-	// handleConfigWizardComplete: editing a provider mid-session must not wipe
-	// the model's history or tear down the settings panel around the user.
-	// These hold whether the rebuild succeeds or fails - handleConfigWizardComplete
-	// would have called exitMode() before it ever reached the client swap.
-	t.is(setMessages.calls.length, 0, 'conversation history is left alone');
-	t.is(setActiveMode.calls.length, 0, 'does not exit the current mode');
-	t.is(setIsSettingsMode.calls.length, 0, 'leaves the settings panel open');
-	t.is(addToChatQueue.calls.length, 1, 'reports the outcome exactly once');
-});
-
-test('enterSettingsMode forwards the requested tab', t => {
-	const {handlers, setSettingsActiveTab} = setup();
-
-	handlers.enterSettingsMode('mcp');
-	handlers.enterSettingsMode();
-
-	t.deepEqual(setSettingsActiveTab.calls, [['mcp'], [undefined]]);
+	t.deepEqual(setActiveMode.calls, [[null]]);
+	t.is(addToChatQueue.calls.length, 0);
 });

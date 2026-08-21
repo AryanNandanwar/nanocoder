@@ -10,7 +10,6 @@ import {
 	getGitStatusSummarySync,
 } from '@/tools/git/utils';
 import {DEVELOPMENT_MODE_LABELS, type DevelopmentMode} from '@/types/core';
-import {homeRelative} from '@/utils/path';
 
 /**
  * Format a {@link GitStatusSummary} for inline display next to the
@@ -55,7 +54,8 @@ function BootSummary({
 	const {colors} = useTheme();
 	const {isNarrow} = useResponsiveTerminal();
 	const configPath = getClosestConfigFile('agents.config.json');
-	const shortConfig = homeRelative(configPath);
+	const homedir = process.env.HOME || process.env.USERPROFILE || '';
+	const shortConfig = homedir ? configPath.replace(homedir, '~') : configPath;
 	const modeLabel = mode ? DEVELOPMENT_MODE_LABELS[mode] : undefined;
 	const gitStatus = getGitStatusSummarySync();
 	const gitLabel = gitStatus ? formatBootSummaryGitLabel(gitStatus) : undefined;

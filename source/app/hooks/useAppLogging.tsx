@@ -109,6 +109,7 @@ export function useAppLogging({
 			!isToolExecuting &&
 			!isToolConfirmationMode &&
 			activeMode !== 'configWizard' &&
+			activeMode !== 'mcpWizard' &&
 			pendingToolCallsLength === 0
 		) {
 			const correlationId = generateCorrelationId();

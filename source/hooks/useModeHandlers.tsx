@@ -1,5 +1,4 @@
 import React from 'react';
-import type {SettingsTabId} from '@/app/components/settings-constants';
 import {createLLMClient} from '@/client-factory';
 import {
 	ErrorMessage,
@@ -34,7 +33,6 @@ interface UseModeHandlersProps {
 	getMessageTokens: (message: Message) => number;
 	setActiveMode: (mode: ActiveMode) => void;
 	setIsSettingsMode: (mode: boolean) => void;
-	setSettingsActiveTab: (tab: SettingsTabId | undefined) => void;
 	addToChatQueue: (component: React.ReactNode) => void;
 	reinitializeMCPServers: (
 		toolManager: import('@/tools/tool-manager').ToolManager,
@@ -55,7 +53,6 @@ export function useModeHandlers({
 	getMessageTokens,
 	setActiveMode,
 	setIsSettingsMode,
-	setSettingsActiveTab,
 	addToChatQueue,
 	reinitializeMCPServers,
 	setTune,
@@ -310,43 +307,19 @@ export function useModeHandlers({
 		}
 	};
 
-	/**
-	 * Pick up provider config written to disk and rebuild the client for the
-	 * current provider/model, leaving messages alone. Split out of the wizard
-	 * handler so the settings panel can reuse it without the mode-exit side
-	 * effects (clearing conversation, resetting to default provider/model).
-	 */
-	const reloadProviders = async () => {
-		reloadAppConfig();
-
-		try {
-			const {client: newClient, actualProvider} = await createLLMClient(
-				currentProvider,
-				currentModel,
-			);
-
-			setClient(newClient);
-			setCurrentProvider(actualProvider);
-			setCurrentProviderConfig(newClient.getProviderConfig());
-
-			const newModel = newClient.getCurrentModel();
-			setCurrentModel(newModel);
-
+	// Handle MCP wizard complete - reinitializes MCP servers
+	const handleMcpWizardComplete = async (configPath?: string) => {
+		exitMode();
+		if (configPath) {
 			addToChatQueue(
 				<SuccessMessage
-					key={generateKey('providers-reloaded')}
-					message="Provider configuration reloaded."
+					key={generateKey('mcp-wizard-complete')}
+					message={`MCP configuration saved to: ${configPath}.`}
 					hideBox={true}
 				/>,
 			);
-		} catch (error) {
-			addToChatQueue(
-				<ErrorMessage
-					key={generateKey('providers-reload-error')}
-					message={`Failed to reload provider configuration: ${String(error)}`}
-					hideBox={true}
-				/>,
-			);
+
+			await reloadMcpServers();
 		}
 	};
 
@@ -400,20 +373,20 @@ export function useModeHandlers({
 		// Convenience enter helpers
 		enterModelSelectionMode: () => enterMode('model'),
 		enterModelDatabaseMode: () => enterMode('modelDatabase'),
+		enterConfigWizardMode: () => enterMode('configWizard'),
+		enterMcpWizardMode: () => enterMode('mcpWizard'),
 		enterExplorerMode: () => enterMode('explorer'),
 		enterIdeSelectionMode: () => enterMode('ideSelection'),
-		enterSettingsMode: (tab?: SettingsTabId) => {
-			setSettingsActiveTab(tab);
-			setIsSettingsMode(true);
-		},
+		enterSettingsMode: () => setIsSettingsMode(true),
 		// Cancel/complete handlers
 		handleModelSelect,
 		handleModelSelectionCancel: exitMode,
 		handleModelDatabaseCancel: exitMode,
 		handleConfigWizardComplete,
 		handleConfigWizardCancel: exitMode,
+		handleMcpWizardComplete,
+		handleMcpWizardCancel: exitMode,
 		reloadMcpServers,
-		reloadProviders,
 		handleSettingsCancel: () => setIsSettingsMode(false),
 		handleExplorerCancel: exitMode,
 		handleIdeSelectionCancel: exitMode,

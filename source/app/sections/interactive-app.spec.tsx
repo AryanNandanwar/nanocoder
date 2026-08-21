@@ -109,6 +109,8 @@ function makeProps(o: Overrides = {}) {
 			handleModelDatabaseCancel: noop,
 			handleConfigWizardComplete: noop,
 			handleConfigWizardCancel: noop,
+			handleMcpWizardComplete: noop,
+			handleMcpWizardCancel: noop,
 			handleSettingsCancel: noop,
 			handleTuneSelect: noop,
 			handleTuneCancel: noop,

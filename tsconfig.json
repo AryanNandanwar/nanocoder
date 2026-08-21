@@ -18,13 +18,7 @@
 		"types": ["node"],
 		"baseUrl": ".",
 		"paths": {
-			"@/*": ["source/*"],
-			// The real `vscode` module only exists inside the extension host, so
-			// AVA (which loads specs through tsx, and tsx honours these paths)
-			// resolves it to a stub. Test-only: the extension is bundled from
-			// plugins/vscode/tsconfig.json with `--external:vscode`, and nothing
-			// under source/ imports it.
-			"vscode": ["plugins/vscode/test-stubs/vscode.ts"]
+			"@/*": ["source/*"]
 		}
 	},
 	"include": ["source/**/*"],

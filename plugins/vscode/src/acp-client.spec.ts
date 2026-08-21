@@ -50,7 +50,6 @@ test('NanocoderAcpClient - cancel resolves and clears pending permissions', asyn
 	const requestPromise = client.handlePermissionRequest({
 		toolCall: { toolCallId: 'call_123', name: 'write_file', arguments: {} },
 	});
-
 	t.true(client.hasPendingPermissions());
 
 	await client.cancel();
@@ -153,18 +152,3 @@ test('NanocoderAcpClient - revertTimeline calls timeline/revert', async (t) => {
 	t.deepEqual(called.params, {sessionId: 'session-1', checkpointId: 'cp-1'});
 });
 
-test('NanocoderAcpClient - reconnecting clears permissions left by the dead process', async (t) => {
-	const outputChannel = {appendLine: () => {}} as any;
-	const stateManager = new AcpStateManager();
-	const client = new NanocoderAcpClient(outputChannel, stateManager);
-
-	const requestPromise = client.handlePermissionRequest({
-		toolCall: {toolCallId: 'call_456', name: 'test_tool', arguments: {}},
-	});
-
-	client.setConnection({} as any);
-
-	const result = await requestPromise;
-	t.is((result as any).outcome.outcome, 'cancelled');
-	t.false(client.hasPendingPermissions());
-});

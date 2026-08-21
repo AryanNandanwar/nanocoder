@@ -5,9 +5,7 @@ import {useState} from 'react';
 import {StyledSelectInput} from '@/components/ui/styled-select-input';
 import {getColors} from '@/config';
 import {getConfigPath} from '@/config/paths';
-import {MIN_PATH_BUDGET_CHARS, WIZARD_ROW_CHROME_CHARS} from '@/constants';
 import {useResponsiveTerminal} from '@/hooks/useTerminalWidth';
-import {homeRelative, truncateMiddle} from '@/utils/path';
 
 export type ConfigLocation = 'project' | 'global';
 
@@ -21,7 +19,6 @@ interface LocationStepProps {
 interface LocationOption {
 	label: string;
 	value: ConfigLocation;
-	path: string;
 }
 
 export function LocationStep({
@@ -31,7 +28,7 @@ export function LocationStep({
 	configFileName = 'agents.config.json',
 }: LocationStepProps) {
 	const colors = getColors();
-	const {boxWidth, isNarrow} = useResponsiveTerminal();
+	const {isNarrow, truncatePath} = useResponsiveTerminal();
 	const projectPath = join(projectDir, configFileName);
 	const globalPath = join(getConfigPath(), configFileName);
 
@@ -54,14 +51,12 @@ export function LocationStep({
 
 	const locationOptions: LocationOption[] = [
 		{
-			label: 'Global user config',
+			label: `Global user config`,
 			value: 'global',
-			path: homeRelative(getConfigPath()),
 		},
 		{
-			label: 'Current project directory',
+			label: `Current project directory`,
 			value: 'project',
-			path: homeRelative(projectDir),
 		},
 	];
 
@@ -106,7 +101,7 @@ export function LocationStep({
 						Configuration found at:{' '}
 					</Text>
 					<Text color={colors.secondary}>
-						{isNarrow ? truncateMiddle(existingPath, 40) : existingPath}
+						{isNarrow ? truncatePath(existingPath, 40) : existingPath}
 					</Text>
 				</Box>
 				<StyledSelectInput
@@ -139,25 +134,6 @@ export function LocationStep({
 			<StyledSelectInput
 				items={locationOptions}
 				onSelect={(item: LocationOption) => handleLocationSelect(item)}
-				itemComponent={({isSelected, label, path}) => {
-					const color = isSelected ? colors.primary : colors.text;
-					const pathBudget = Math.max(
-						MIN_PATH_BUDGET_CHARS,
-						boxWidth - WIZARD_ROW_CHROME_CHARS,
-					);
-					return (
-						<Box flexDirection="column">
-							<Text color={color} wrap="truncate-end">
-								{label}
-							</Text>
-							<Box marginLeft={2}>
-								<Text color={colors.secondary} wrap="truncate-end">
-									{truncateMiddle(path, pathBudget)}
-								</Text>
-							</Box>
-						</Box>
-					);
-				}}
 			/>
 			{!isNarrow && (
 				<Box marginTop={1}>
