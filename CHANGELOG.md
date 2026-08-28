@@ -1,5 +1,12 @@
 # @nanocollective/nanocoder
 
+# 1.30.1
+
+- Fixed the daemon socket path on Unix when a deeply nested project pushes it past the `sockaddr_un.sun_path` limit (104 bytes on macOS, 108 on Linux). libuv silently truncates overlong paths rather than failing, so the daemon reported a socket it never bound, its stale-socket cleanup missed the real file, and two projects sharing a truncation prefix could collide on a single socket. Nanocoder now falls back to a stable hashed socket name under the system temp directory (or `/tmp` if `TMPDIR` is itself too long), and `daemon start` reports the path the daemon actually bound instead of recomputing it.
+- Added slash command quick actions to the VS Code extension chat panel. Typing `/` in the input opens an autocomplete menu listing `/test`, `/explain`, and `/doc`, which insert a human-readable prompt template into the textarea so the user sees and can edit exactly what gets sent, alongside the existing `/clear` and `/copy` commands, which complete to their name and run as they always have. The menu only opens on a slash that starts a line, so URLs and paths are left alone.
+
+If there are any problems, feedback or thoughts please drop an issue or message us through Discord! Thank you for using Nanocoder.
+
 # 1.30.0
 
 - Added first-class provider template for Groq to the setup wizard.
